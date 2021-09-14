@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/holiman/uint256 v1.2.0
-	github.com/jaanek/jeth v0.0.0-20210914082821-5055fbb9549c
+	github.com/jaanek/jeth v0.0.0-20210914190818-582a31f61ab2
 	github.com/jaanek/jethwallet v0.0.0-20210914115146-e169298dde6c
 	github.com/ledgerwatch/erigon v1.9.7-0.20210910030623-71ec0938b569
 	github.com/urfave/cli v1.22.5
@@ -19,7 +19,7 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/karalabe/usb v0.0.0-20210518091819-4ea20957c210 // indirect
-	github.com/ledgerwatch/erigon-lib v0.0.0-20210913173109-6dce34ac32e8 // indirect
+	github.com/ledgerwatch/erigon-lib v0.0.0-20210914150133-645eb83eca1c // indirect
 	github.com/ledgerwatch/log/v3 v3.3.0 // indirect
 	github.com/ledgerwatch/secp256k1 v0.0.0-20210626115225-cd5cd00ed72d // indirect
 	github.com/mattn/go-colorable v0.1.8 // indirect

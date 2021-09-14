@@ -3,6 +3,7 @@ package contracts
 import (
 	"errors"
 	"fmt"
+	"math/big"
 	"time"
 
 	"github.com/holiman/uint256"
@@ -22,6 +23,10 @@ type MethodSpec struct {
 	name    string
 	inputs  []string
 	outputs []string
+}
+
+type EventSpec struct {
+	inputs []string
 }
 
 var rarityMethods = []MethodSpec{{
@@ -49,6 +54,12 @@ var rarityMethods = []MethodSpec{{
 	inputs:  []string{"uint256"},
 	outputs: []string{"uint256", "uint256", "uint256", "uint256"},
 }}
+
+type RarityEventSummoned struct {
+	Owner    common.Address
+	Class    *big.Int
+	Summoner *big.Int
+}
 
 type rarityContract struct {
 	name         string
