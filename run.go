@@ -8,7 +8,7 @@ import (
 	"github.com/jaanek/jeth/eth"
 	"github.com/jaanek/jeth/rpc"
 	"github.com/jaanek/jeth/ui"
-	"github.com/jaanek/rarity-bot/build/contracts"
+	"github.com/jaanek/rarity-bot/contracts"
 	"github.com/ledgerwatch/erigon/common"
 	"github.com/urfave/cli"
 )
