@@ -73,7 +73,15 @@ func setUp() error {
 func tearDown(term ui.Screen) {
 }
 
-func TestIt(t *testing.T) {
+func TestSummon(t *testing.T) {
+	classId, _ := uint256.FromBig(new(big.Int).SetUint64(1))
+	_, _, err := rarity.Summon(classId, -1)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestSummoner(t *testing.T) {
 	summonerId, _ := uint256.FromBig(new(big.Int).SetUint64(1))
 	xp, adventureLog, class, level, err := rarity.Summoner(summonerId)
 	if err != nil {
