@@ -11,6 +11,7 @@ import (
 	"github.com/jaanek/jeth/rpc"
 	"github.com/jaanek/jeth/ui"
 	"github.com/ledgerwatch/erigon/common"
+	"github.com/ledgerwatch/erigon/core/types"
 )
 
 func DeployRarity(term ui.Screen, ep rpc.Endpoint, fromAddr common.Address, bin []byte, value *uint256.Int, waitTime time.Duration, txSigner eth.TxSigner) (string, *eth.TxReceipt, error) {
@@ -19,40 +20,36 @@ func DeployRarity(term ui.Screen, ep rpc.Endpoint, fromAddr common.Address, bin 
 	return eth.Deploy(term, ep, fromAddr, bin, value, typeNames, values, waitTime, txSigner)
 }
 
-type MethodSpec struct {
-	name    string
-	inputs  []string
-	outputs []string
-}
+var rarityMethods = []eth.MethodSpec{{
+	Name:    "summon",
+	Inputs:  []string{"uint256"},
+	Outputs: []string{},
+}, {
+	Name:    "adventure",
+	Inputs:  []string{"uint256"},
+	Outputs: []string{},
+}, {
+	Name:    "level_up",
+	Inputs:  []string{"uint256"},
+	Outputs: []string{},
+}, {
+	Name:    "adventurers_log",
+	Inputs:  []string{"uint256"},
+	Outputs: []string{"uint256"},
+}, {
+	Name:    "balanceOf",
+	Inputs:  []string{"address"},
+	Outputs: []string{"uint256"},
+}, {
+	Name:    "summoner",
+	Inputs:  []string{"uint256"},
+	Outputs: []string{"uint256", "uint256", "uint256", "uint256"},
+}}
 
-type EventSpec struct {
-	inputs []string
-}
-
-var rarityMethods = []MethodSpec{{
-	name:    "summon",
-	inputs:  []string{"uint256"},
-	outputs: []string{},
-}, {
-	name:    "adventure",
-	inputs:  []string{"uint256"},
-	outputs: []string{},
-}, {
-	name:    "level_up",
-	inputs:  []string{"uint256"},
-	outputs: []string{},
-}, {
-	name:    "adventurers_log",
-	inputs:  []string{"uint256"},
-	outputs: []string{"uint256"},
-}, {
-	name:    "balanceOf",
-	inputs:  []string{"address"},
-	outputs: []string{"uint256"},
-}, {
-	name:    "summoner",
-	inputs:  []string{"uint256"},
-	outputs: []string{"uint256", "uint256", "uint256", "uint256"},
+var rarityEvents = []eth.EventSpec{{
+	Name:      "summoned",
+	TopicArgs: []string{"address"},
+	DataArgs:  []string{"uint256", "uint256"},
 }}
 
 type RarityEventSummoned struct {
@@ -69,9 +66,11 @@ type rarityContract struct {
 	fromAddr     *common.Address
 	txSigner     eth.TxSigner
 	methods      map[string]eth.Method
+	events       map[string]eth.Event
 }
 
 type Rarity interface {
+	GetEvent(eventName string, out interface{}, logs []types.Log) error
 	Summon(class *uint256.Int, waitTime time.Duration) (string, *eth.TxReceipt, error)
 	Adventure(summoner *uint256.Int, waitTime time.Duration) (string, *eth.TxReceipt, error)
 	LevelUp(summoner *uint256.Int, waitTime time.Duration) (string, *eth.TxReceipt, error)
@@ -83,11 +82,19 @@ type Rarity interface {
 func NewRarity(term ui.Screen, ep rpc.Endpoint, contractAddr common.Address, fromAddr *common.Address, txSigner eth.TxSigner) (Rarity, error) {
 	methods := make(map[string]eth.Method, len(rarityMethods))
 	for _, methodSpec := range rarityMethods {
-		method, err := eth.NewMethod(term, ep, methodSpec.name, methodSpec.inputs, methodSpec.outputs)
+		method, err := eth.NewMethod(term, ep, methodSpec.Name, methodSpec.Inputs, methodSpec.Outputs)
 		if err != nil {
-			return nil, fmt.Errorf("error in rarity %s method: %w", methodSpec.name, err)
+			return nil, fmt.Errorf("error in rarity %s method: %w", methodSpec.Name, err)
 		}
-		methods[methodSpec.name] = method
+		methods[methodSpec.Name] = method
+	}
+	events := make(map[string]eth.Event, len(rarityEvents))
+	for _, eventSpec := range rarityEvents {
+		event, err := eth.NewEvent(eventSpec.Name, eventSpec.TopicArgs, eventSpec.DataArgs)
+		if err != nil {
+			return nil, fmt.Errorf("error in rarity %s event: %w", eventSpec.Name, err)
+		}
+		events[eventSpec.Name] = event
 	}
 	return &rarityContract{
 		name:         "rarity",
@@ -97,7 +104,16 @@ func NewRarity(term ui.Screen, ep rpc.Endpoint, contractAddr common.Address, fro
 		fromAddr:     fromAddr,
 		txSigner:     txSigner,
 		methods:      methods,
+		events:       events,
 	}, nil
+}
+
+func (c *rarityContract) GetEvent(eventName string, out interface{}, logs []types.Log) error {
+	event, ok := c.events[eventName]
+	if !ok {
+		return errors.New(fmt.Sprintf("Contract %s event %s not declared", c.name, eventName))
+	}
+	return event.ParseInto(out, logs)
 }
 
 func (c *rarityContract) Summon(class *uint256.Int, waitTime time.Duration) (string, *eth.TxReceipt, error) {

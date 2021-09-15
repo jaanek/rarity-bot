@@ -4,14 +4,14 @@ go 1.17
 
 require (
 	github.com/holiman/uint256 v1.2.0
-	github.com/jaanek/jeth v0.0.0-20210914190818-582a31f61ab2
+	github.com/jaanek/jeth v0.0.0-20210915064639-bece1bf4f821
 	github.com/jaanek/jethwallet v0.0.0-20210914115146-e169298dde6c
 	github.com/ledgerwatch/erigon v1.9.7-0.20210910030623-71ec0938b569
 	github.com/urfave/cli v1.22.5
 )
 
 require (
-	github.com/VictoriaMetrics/metrics v1.17.3 // indirect
+	github.com/VictoriaMetrics/metrics v1.18.0 // indirect
 	github.com/btcsuite/btcd v0.22.0-beta // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
@@ -19,7 +19,7 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/karalabe/usb v0.0.0-20210518091819-4ea20957c210 // indirect
-	github.com/ledgerwatch/erigon-lib v0.0.0-20210914150133-645eb83eca1c // indirect
+	github.com/ledgerwatch/erigon-lib v0.0.0-20210915061134-aa7acc120ca3 // indirect
 	github.com/ledgerwatch/log/v3 v3.3.0 // indirect
 	github.com/ledgerwatch/secp256k1 v0.0.0-20210626115225-cd5cd00ed72d // indirect
 	github.com/mattn/go-colorable v0.1.8 // indirect
@@ -30,8 +30,8 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/ugorji/go/codec v1.2.6 // indirect
 	github.com/valyala/fastjson v1.6.3 // indirect
-	github.com/valyala/fastrand v1.0.0 // indirect
-	github.com/valyala/histogram v1.1.2 // indirect
+	github.com/valyala/fastrand v1.1.0 // indirect
+	github.com/valyala/histogram v1.2.0 // indirect
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect
 	golang.org/x/sys v0.0.0-20210910150752-751e447fb3d0 // indirect
 	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b // indirect

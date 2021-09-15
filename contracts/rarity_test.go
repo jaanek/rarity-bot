@@ -73,9 +73,6 @@ func setUp() error {
 func tearDown(term ui.Screen) {
 }
 
-type AbiEventSpec struct {
-}
-
 func TestSummon(t *testing.T) {
 	classId, _ := uint256.FromBig(new(big.Int).SetUint64(11))
 	_, receipt, err := rarity.Summon(classId, -1)
@@ -84,12 +81,7 @@ func TestSummon(t *testing.T) {
 		return
 	}
 	event := new(RarityEventSummoned)
-	summoned, err := eth.NewEvent("summoned", []string{"address"}, []string{"uint256", "uint256"})
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	err = summoned.ParseInto(event, receipt.Logs)
+	err = rarity.GetEvent("summoned", event, receipt.Logs)
 	if err != nil {
 		t.Error(err)
 		return
