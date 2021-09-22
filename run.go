@@ -6,6 +6,7 @@ import (
 	"github.com/holiman/uint256"
 	"github.com/jaanek/jeth/rpc"
 	"github.com/jaanek/jeth/ui"
+	"github.com/jaanek/jethwallet/keystore"
 	"github.com/jaanek/rarity-bot/rarity"
 	"github.com/ledgerwatch/erigon/common"
 	"github.com/urfave/cli"
@@ -20,13 +21,14 @@ var summonerIds = []uint64{
 }
 
 func RunCommand(term ui.Screen, ctx *cli.Context) error {
-	txSigner := NewKeystoreTxSigner(term, "/home/jaanek/.keystore")
+	txSigner := keystore.NewTxSigner(term, "/home/jaanek/.keystore")
 	fromAddr := common.HexToAddress("0x09B1f3837E7B2F758Fab836B4e85b7AD0cA32f86")
 	endpoint := rpc.NewEndpoint("https://rpc.ftm.tools")
 	err := txSigner.AskPasswordFor(fromAddr)
 	if err != nil {
 		return err
 	}
+	txSigner.ForceLegaxyTx() // fantom network does not support eip-1559 tx-es
 	rarityAddr := common.HexToAddress("0xce761D788DF608BD21bdd59d6f4B54b2e27F25Bb")
 	rarity, err := rarity.New(term, endpoint, rarityAddr, &fromAddr, txSigner)
 	if err != nil {

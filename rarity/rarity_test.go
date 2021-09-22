@@ -43,7 +43,7 @@ func setUp() error {
 	if err != nil {
 		return err
 	}
-	// dev environment does not support eip-1559 tx-es
+	// dev network does not support eip-1559 tx-es
 	txSigner.ForceLegaxyTx()
 
 	// send initial eth to test accounts
