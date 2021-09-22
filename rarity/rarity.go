@@ -1,4 +1,4 @@
-package contracts
+package rarity
 
 import (
 	"errors"
@@ -14,13 +14,12 @@ import (
 	"github.com/ledgerwatch/erigon/core/types"
 )
 
-func DeployRarity(term ui.Screen, ep rpc.Endpoint, fromAddr common.Address, bin []byte, value *uint256.Int, waitTime time.Duration, txSigner eth.TxSigner) (string, *eth.TxReceipt, error) {
-	typeNames := []string{}
-	values := []string{}
-	return eth.Deploy(term, ep, fromAddr, bin, value, typeNames, values, waitTime, txSigner)
+func Deploy(term ui.Screen, ep rpc.Endpoint, fromAddr common.Address, bin []byte, value *uint256.Int, waitTime time.Duration, txSigner eth.TxSigner) (string, *eth.TxReceipt, error) {
+	return eth.Deploy(term, ep, fromAddr, bin, value, []string{}, []string{}, waitTime, txSigner)
 }
 
-var rarityMethods = []eth.MethodSpec{{
+// declared methods
+var abiMethods = []eth.MethodSpec{{
 	Name:    "summon",
 	Inputs:  []string{"uint256"},
 	Outputs: []string{},
@@ -41,24 +40,29 @@ var rarityMethods = []eth.MethodSpec{{
 	Inputs:  []string{"address"},
 	Outputs: []string{"uint256"},
 }, {
+	Name:    "xp_required",
+	Inputs:  []string{"uint256"},
+	Outputs: []string{"uint256"},
+}, {
 	Name:    "summoner",
 	Inputs:  []string{"uint256"},
 	Outputs: []string{"uint256", "uint256", "uint256", "uint256"},
 }}
 
-var rarityEvents = []eth.EventSpec{{
+// declared events
+var abiEvents = []eth.EventSpec{{
 	Name:      "summoned",
 	TopicArgs: []string{"address"},
 	DataArgs:  []string{"uint256", "uint256"},
 }}
 
-type RarityEventSummoned struct {
+type EventSummoned struct {
 	Owner    common.Address
 	Class    *big.Int
 	Summoner *big.Int
 }
 
-type rarityContract struct {
+type contract struct {
 	name         string
 	term         ui.Screen
 	endpoint     rpc.Endpoint
@@ -69,34 +73,35 @@ type rarityContract struct {
 	events       map[string]eth.Event
 }
 
-type Rarity interface {
+type Contract interface {
 	GetEvent(eventName string, out interface{}, logs []types.Log) error
 	Summon(class *uint256.Int, waitTime time.Duration) (string, *eth.TxReceipt, error)
 	Adventure(summoner *uint256.Int, waitTime time.Duration) (string, *eth.TxReceipt, error)
 	LevelUp(summoner *uint256.Int, waitTime time.Duration) (string, *eth.TxReceipt, error)
 	AdventurersLog(summoner *uint256.Int) (*uint256.Int, error)
 	BalanceOf(address common.Address) (*uint256.Int, error)
+	XpRequired(level *uint256.Int) (*uint256.Int, error)
 	Summoner(summoner *uint256.Int) (*uint256.Int, *uint256.Int, *uint256.Int, *uint256.Int, error)
 }
 
-func NewRarity(term ui.Screen, ep rpc.Endpoint, contractAddr common.Address, fromAddr *common.Address, txSigner eth.TxSigner) (Rarity, error) {
-	methods := make(map[string]eth.Method, len(rarityMethods))
-	for _, methodSpec := range rarityMethods {
+func New(term ui.Screen, ep rpc.Endpoint, contractAddr common.Address, fromAddr *common.Address, txSigner eth.TxSigner) (Contract, error) {
+	methods := make(map[string]eth.Method, len(abiMethods))
+	for _, methodSpec := range abiMethods {
 		method, err := eth.NewMethod(term, ep, methodSpec.Name, methodSpec.Inputs, methodSpec.Outputs)
 		if err != nil {
 			return nil, fmt.Errorf("error in rarity %s method: %w", methodSpec.Name, err)
 		}
 		methods[methodSpec.Name] = method
 	}
-	events := make(map[string]eth.Event, len(rarityEvents))
-	for _, eventSpec := range rarityEvents {
+	events := make(map[string]eth.Event, len(abiEvents))
+	for _, eventSpec := range abiEvents {
 		event, err := eth.NewEvent(eventSpec.Name, eventSpec.TopicArgs, eventSpec.DataArgs)
 		if err != nil {
 			return nil, fmt.Errorf("error in rarity %s event: %w", eventSpec.Name, err)
 		}
 		events[eventSpec.Name] = event
 	}
-	return &rarityContract{
+	return &contract{
 		name:         "rarity",
 		term:         term,
 		endpoint:     ep,
@@ -108,7 +113,7 @@ func NewRarity(term ui.Screen, ep rpc.Endpoint, contractAddr common.Address, fro
 	}, nil
 }
 
-func (c *rarityContract) GetEvent(eventName string, out interface{}, logs []types.Log) error {
+func (c *contract) GetEvent(eventName string, out interface{}, logs []types.Log) error {
 	event, ok := c.events[eventName]
 	if !ok {
 		return errors.New(fmt.Sprintf("Contract %s event %s not declared", c.name, eventName))
@@ -116,7 +121,7 @@ func (c *rarityContract) GetEvent(eventName string, out interface{}, logs []type
 	return event.ParseInto(out, logs)
 }
 
-func (c *rarityContract) Summon(class *uint256.Int, waitTime time.Duration) (string, *eth.TxReceipt, error) {
+func (c *contract) Summon(class *uint256.Int, waitTime time.Duration) (string, *eth.TxReceipt, error) {
 	hash, receipt, err := c.methods["summon"].Send(*c.fromAddr, c.contractAddr, nil, []string{class.ToBig().String()}, waitTime, c.txSigner)
 	if err != nil {
 		return hash, nil, fmt.Errorf("Contract %s method: %s, err: %w\n", c.name, c.methods["summon"].Name(), err)
@@ -124,7 +129,7 @@ func (c *rarityContract) Summon(class *uint256.Int, waitTime time.Duration) (str
 	return hash, receipt, nil
 }
 
-func (c *rarityContract) Adventure(summoner *uint256.Int, waitTime time.Duration) (string, *eth.TxReceipt, error) {
+func (c *contract) Adventure(summoner *uint256.Int, waitTime time.Duration) (string, *eth.TxReceipt, error) {
 	hash, receipt, err := c.methods["adventure"].Send(*c.fromAddr, c.contractAddr, nil, []string{summoner.ToBig().String()}, waitTime, c.txSigner)
 	if err != nil {
 		return hash, nil, fmt.Errorf("Contract %s method: %s, err: %w\n", c.name, c.methods["adventure"].Name(), err)
@@ -132,7 +137,7 @@ func (c *rarityContract) Adventure(summoner *uint256.Int, waitTime time.Duration
 	return hash, receipt, nil
 }
 
-func (c *rarityContract) LevelUp(summoner *uint256.Int, waitTime time.Duration) (string, *eth.TxReceipt, error) {
+func (c *contract) LevelUp(summoner *uint256.Int, waitTime time.Duration) (string, *eth.TxReceipt, error) {
 	hash, receipt, err := c.methods["level_up"].Send(*c.fromAddr, c.contractAddr, nil, []string{summoner.ToBig().String()}, waitTime, c.txSigner)
 	if err != nil {
 		return hash, nil, fmt.Errorf("Contract %s method: %s, err: %w\n", c.name, c.methods["level_up"].Name(), err)
@@ -140,7 +145,7 @@ func (c *rarityContract) LevelUp(summoner *uint256.Int, waitTime time.Duration) 
 	return hash, receipt, nil
 }
 
-func (c *rarityContract) AdventurersLog(summoner *uint256.Int) (*uint256.Int, error) {
+func (c *contract) AdventurersLog(summoner *uint256.Int) (*uint256.Int, error) {
 	result, unpacked, err := c.methods["adventurers_log"].Call(c.fromAddr, c.contractAddr, nil, []string{summoner.ToBig().String()})
 	if err != nil {
 		return nil, fmt.Errorf("Contract %s method: %s, err: %w\n", c.name, c.methods["adventurers_log"].Name(), err)
@@ -152,7 +157,7 @@ func (c *rarityContract) AdventurersLog(summoner *uint256.Int) (*uint256.Int, er
 	return unpacked[0].ToUint256()
 }
 
-func (c *rarityContract) BalanceOf(address common.Address) (*uint256.Int, error) {
+func (c *contract) BalanceOf(address common.Address) (*uint256.Int, error) {
 	result, unpacked, err := c.methods["balanceOf"].Call(c.fromAddr, c.contractAddr, nil, []string{address.Hex()})
 	if err != nil {
 		return nil, fmt.Errorf("Contract %s method: %s, err: %w\n", c.name, c.methods["balanceOf"].Name(), err)
@@ -164,7 +169,19 @@ func (c *rarityContract) BalanceOf(address common.Address) (*uint256.Int, error)
 	return unpacked[0].ToUint256()
 }
 
-func (c *rarityContract) Summoner(summoner *uint256.Int) (*uint256.Int, *uint256.Int, *uint256.Int, *uint256.Int, error) {
+func (c *contract) XpRequired(level *uint256.Int) (*uint256.Int, error) {
+	result, unpacked, err := c.methods["xp_required"].Call(c.fromAddr, c.contractAddr, nil, []string{level.ToBig().String()})
+	if err != nil {
+		return nil, fmt.Errorf("Contract %s method: %s, err: %w\n", c.name, c.methods["xp_required"].Name(), err)
+	}
+	if len(unpacked) == 0 {
+		// it can happen if call sent to wrong or missing contract
+		return nil, errors.New(fmt.Sprintf("Contract %s method: %s. No result: %s returned from node", c.name, c.methods["xp_required"].Name(), string(result)))
+	}
+	return unpacked[0].ToUint256()
+}
+
+func (c *contract) Summoner(summoner *uint256.Int) (*uint256.Int, *uint256.Int, *uint256.Int, *uint256.Int, error) {
 	result, unpacked, err := c.methods["summoner"].Call(c.fromAddr, c.contractAddr, nil, []string{summoner.ToBig().String()})
 	if err != nil {
 		return nil, nil, nil, nil, fmt.Errorf("Contract %s method: %s, err: %w\n", c.name, c.methods["summoner"].Name(), err)

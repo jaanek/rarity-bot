@@ -1,4 +1,4 @@
-package contracts
+package rarity
 
 import (
 	"fmt"
@@ -16,10 +16,10 @@ import (
 
 var (
 	term     ui.Screen
-	txSigner keystore.KeystoreTxSigner
+	txSigner keystore.TxSigner
 	fromAddr common.Address
 	endpoint rpc.Endpoint
-	rarity   Rarity
+	rarity   Contract
 )
 
 func TestMain(m *testing.M) {
@@ -48,7 +48,7 @@ func setUp() error {
 
 	// send initial eth to test accounts
 	value := new(uint256.Int).SetUint64(1)
-	_, receipt, err := eth.Send(term, endpoint, fromAddr, fromAddr, value, []byte{}, -1, txSigner)
+	_, receipt, err := eth.SendValue(term, endpoint, fromAddr, fromAddr, value, -1, txSigner)
 	if err != nil {
 		return err
 	}
@@ -58,12 +58,12 @@ func setUp() error {
 	if err != nil {
 		return err
 	}
-	_, receipt, err = DeployRarity(term, endpoint, fromAddr, bin, nil, -1, txSigner)
+	_, receipt, err = Deploy(term, endpoint, fromAddr, bin, nil, -1, txSigner)
 	if err != nil {
 		return err
 	}
 	rarityAddr := common.HexToAddress(receipt.ContractAddress)
-	rarity, err = NewRarity(term, endpoint, rarityAddr, &fromAddr, txSigner)
+	rarity, err = New(term, endpoint, rarityAddr, &fromAddr, txSigner)
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func TestSummon(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	event := new(RarityEventSummoned)
+	event := new(EventSummoned)
 	err = rarity.GetEvent("summoned", event, receipt.Logs)
 	if err != nil {
 		t.Error(err)
@@ -90,7 +90,7 @@ func TestSummon(t *testing.T) {
 }
 
 func TestSummoner(t *testing.T) {
-	summonerId, _ := uint256.FromBig(new(big.Int).SetUint64(1))
+	summonerId, _ := uint256.FromBig(new(big.Int).SetUint64(0))
 	xp, adventureLog, class, level, err := rarity.Summoner(summonerId)
 	if err != nil {
 		t.Errorf("Error while calling summoner: err: %w\n", err)
