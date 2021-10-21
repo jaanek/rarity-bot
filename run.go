@@ -68,7 +68,6 @@ func levelUp(term ui.Screen, rarity rarity.Contract) {
 			continue
 		}
 		term.Print(fmt.Sprintf("Received receipt: %+v", receipt))
-		break
 	}
 }
 

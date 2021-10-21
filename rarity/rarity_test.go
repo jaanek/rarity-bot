@@ -37,7 +37,8 @@ func TestMain(m *testing.M) {
 
 func setUp() error {
 	txSigner = keystore.NewTxSigner(term, "/home/jaanek/.keystore-dev")
-	fromAddr = common.HexToAddress("0x997a72d25791c4E2B717c094B924Fd5FFA825AFa")
+	// fromAddr = common.HexToAddress("0x997a72d25791c4E2B717c094B924Fd5FFA825AFa")
+	fromAddr = common.HexToAddress("0x67b1d87101671b127f5f8714789C7192f7ad340e")
 	endpoint = rpc.NewEndpoint("http://localhost:8545")
 	err := txSigner.SetPasswordFor(fromAddr, "")
 	if err != nil {

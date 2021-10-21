@@ -19,7 +19,7 @@ func Deploy(term ui.Screen, ep rpc.Endpoint, fromAddr common.Address, bin []byte
 }
 
 // declared methods
-var abiMethods = []eth.MethodSpec{{
+var methods = []eth.MethodSpec{{
 	Name:    "summon",
 	Inputs:  []string{"uint256"},
 	Outputs: []string{},
@@ -50,7 +50,7 @@ var abiMethods = []eth.MethodSpec{{
 }}
 
 // declared events
-var abiEvents = []eth.EventSpec{{
+var events = []eth.EventSpec{{
 	Name:      "summoned",
 	TopicArgs: []string{"address"},
 	DataArgs:  []string{"uint256", "uint256"},
@@ -85,21 +85,21 @@ type Contract interface {
 }
 
 func New(term ui.Screen, ep rpc.Endpoint, contractAddr common.Address, fromAddr *common.Address, txSigner eth.TxSigner) (Contract, error) {
-	methods := make(map[string]eth.Method, len(abiMethods))
-	for _, methodSpec := range abiMethods {
+	methodsMap := make(map[string]eth.Method, len(methods))
+	for _, methodSpec := range methods {
 		method, err := eth.NewMethod(term, ep, methodSpec.Name, methodSpec.Inputs, methodSpec.Outputs)
 		if err != nil {
 			return nil, fmt.Errorf("error in rarity %s method: %w", methodSpec.Name, err)
 		}
-		methods[methodSpec.Name] = method
+		methodsMap[methodSpec.Name] = method
 	}
-	events := make(map[string]eth.Event, len(abiEvents))
-	for _, eventSpec := range abiEvents {
+	eventsMap := make(map[string]eth.Event, len(events))
+	for _, eventSpec := range events {
 		event, err := eth.NewEvent(eventSpec.Name, eventSpec.TopicArgs, eventSpec.DataArgs)
 		if err != nil {
 			return nil, fmt.Errorf("error in rarity %s event: %w", eventSpec.Name, err)
 		}
-		events[eventSpec.Name] = event
+		eventsMap[eventSpec.Name] = event
 	}
 	return &contract{
 		name:         "rarity",
@@ -108,8 +108,8 @@ func New(term ui.Screen, ep rpc.Endpoint, contractAddr common.Address, fromAddr 
 		contractAddr: contractAddr,
 		fromAddr:     fromAddr,
 		txSigner:     txSigner,
-		methods:      methods,
-		events:       events,
+		methods:      methodsMap,
+		events:       eventsMap,
 	}, nil
 }
 
